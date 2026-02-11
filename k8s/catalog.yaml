@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: catalog
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-api
+  namespace: catalog
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: catalog-api }
+  template:
+    metadata:
+      labels: { app: catalog-api }
+    spec:
+      containers:
+        - name: catalog-api
+          image: catalog-api:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "3003"
+            - name: ACCOUNTS_URL
+              value: "http://accounts-api.accounts.svc.cluster.local:3002"
+            # Insights (set by accounts orchestrator)
+            - name: POSTMAN_INSIGHTS_PROJECT_ID
+              value: "__CATALOG_PROJECT_ID__"
+            - name: POSTMAN_INSIGHTS_API_KEY
+              value: "__POSTMAN_API_KEY__"
+          ports:
+            - containerPort: 3003
+          readinessProbe:
+            httpGet: { path: /health, port: 3003 }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 3003 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-api
+  namespace: catalog
+spec:
+  selector: { app: catalog-api }
+  ports:
+    - name: http
+      port: 3003
+      targetPort: 3003
