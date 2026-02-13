@@ -1,0 +1,100 @@
+name: API Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-api-spec:
+    name: Lint API Specification
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+
+      - name: Lint OpenAPI Spec
+        run: postman spec lint postman/specs/catalog-api.openapi.yaml --report-events
+
+  run-collection-tests:
+    name: Run Collection Tests
+    runs-on: ubuntu-latest
+    needs: lint-api-spec
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+
+      - name: Start Accounts Service Mock
+        run: |
+          node postman/mocks/mock.js &
+          echo $! > mock.pid
+          echo "Accounts Service Mock started with PID $(cat mock.pid)"
+
+      - name: Start Catalog Service
+        run: |
+          node src/index.js &
+          echo $! > catalog.pid
+          echo "Catalog Service started with PID $(cat catalog.pid)"
+        env:
+          PORT: 3001
+          ACCOUNTS_BASE_URL: http://localhost:3002
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for Accounts Service Mock on port 3002..."
+          timeout 30 bash -c 'until curl -s http://localhost:3002 > /dev/null 2>&1; do sleep 1; done' || echo "Mock service may not have health endpoint"
+          
+          echo "Waiting for Catalog Service on port 3001..."
+          timeout 30 bash -c 'until curl -s http://localhost:3001 > /dev/null 2>&1; do sleep 1; done' || echo "Catalog service may not have health endpoint"
+          
+          # Additional wait to ensure services are fully ready
+          sleep 5
+          
+          echo "Services should be ready"
+
+      - name: Run Postman Collection Tests
+        run: |
+          postman collection run "postman/collections/Catalog Service API.postman_collection.json" --env-var "baseUrl=http://localhost:3001" --report-events
+
+      - name: Cleanup background processes
+        if: always()
+        run: |
+          if [ -f mock.pid ]; then
+            kill $(cat mock.pid) 2>/dev/null || true
+            rm mock.pid
+          fi
+          if [ -f catalog.pid ]; then
+            kill $(cat catalog.pid) 2>/dev/null || true
+            rm catalog.pid
+          fi
+          echo "Background processes cleaned up"
