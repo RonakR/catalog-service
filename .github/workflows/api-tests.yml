@@ -62,7 +62,7 @@ jobs:
 
       - name: Start Catalog Service
         run: |
-          node index.js &
+          node src/index.js &
           echo $! > catalog.pid
           echo "Catalog Service started with PID $(cat catalog.pid)"
         env:
