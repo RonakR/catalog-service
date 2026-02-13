@@ -28,7 +28,7 @@ jobs:
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
 
       - name: Lint OpenAPI Spec
-        run: postman api lint postman/specs/catalog-api.openapi.yaml
+        run: postman spec lint postman/specs/catalog-api.openapi.yaml --report-events
 
   run-collection-tests:
     name: Run Collection Tests
@@ -84,7 +84,7 @@ jobs:
 
       - name: Run Postman Collection Tests
         run: |
-          postman collection run "postman/collections/Catalog Service API.postman_collection.json"
+          postman collection run "postman/collections/Catalog Service API.postman_collection.json" --env-var "baseUrl=http://localhost:3001" --report-events
 
       - name: Cleanup background processes
         if: always()
