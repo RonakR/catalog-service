@@ -1,0 +1,296 @@
+openapi: 3.0.3
+info:
+  title: Catalog API
+  version: 1.0.0
+  description: Manage products and product assignments.
+servers:
+  - url: http://localhost:3003
+paths:
+  /products:
+    post:
+      summary: Create a product
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List products (optionally filtered by category)
+      tags:
+        - Products
+      parameters:
+        - in: query
+          name: category
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Products list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductsResponse'
+  /products/all:
+    get:
+      summary: List all products
+      tags:
+        - Products
+      responses:
+        '200':
+          description: Products list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductsResponse'
+  /products/{id}:
+    get:
+      summary: Get a product by id
+      tags:
+        - Products
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /products/{id}/assign:
+    post:
+      summary: Assign a product to an account
+      tags:
+        - Assignments
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignProductRequest'
+      responses:
+        '201':
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /assignments:
+    get:
+      summary: List assignments for an account
+      tags:
+        - Assignments
+      parameters:
+        - in: query
+          name: accountId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assignments list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentsResponse'
+        '400':
+          description: Missing accountId query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /health:
+    get:
+      summary: Health check
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: p1
+        name:
+          type: string
+          example: Pro plan
+        price:
+          type: number
+          example: 49
+        category:
+          type: string
+          example: subscriptions
+      required:
+        - id
+        - name
+        - price
+        - category
+    ProductCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Pro plan
+        price:
+          type: number
+          example: 49
+        category:
+          type: string
+          example: subscriptions
+      required:
+        - name
+    ProductResponse:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/Product'
+      required:
+        - product
+    ProductsResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+      required:
+        - products
+    AssignProductRequest:
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: acc_123
+      required:
+        - accountId
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: as1
+        accountId:
+          type: string
+          example: acc_123
+        productId:
+          type: string
+          example: p1
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-02-10T12:00:00.000Z
+      required:
+        - id
+        - accountId
+        - productId
+        - createdAt
+    Charge:
+      type: object
+      properties:
+        balance:
+          type: number
+          example: 151
+        currency:
+          type: string
+          example: USD
+      required:
+        - balance
+        - currency
+    AssignmentResponse:
+      type: object
+      properties:
+        assignment:
+          $ref: '#/components/schemas/Assignment'
+        charge:
+          allOf:
+            - $ref: '#/components/schemas/Charge'
+          nullable: true
+      required:
+        - assignment
+    AssignmentsResponse:
+      type: object
+      properties:
+        assignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assignment'
+      required:
+        - assignments
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: catalog-api
+      required:
+        - status
+        - service
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: product not found
+      required:
+        - error

@@ -1,0 +1,515 @@
+{
+	"info": {
+		"_postman_id": "catalog-service-api-collection",
+		"name": "Catalog Service API",
+		"description": "API collection for the Catalog Service - manages products and assignments",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "Create Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test for successful product creation (201)",
+									"if (pm.response.code === 201) {",
+									"    pm.test('Status code is 201 Created', function () {",
+									"        pm.response.to.have.status(201);",
+									"    });",
+									"",
+									"    pm.test('Response has product object', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('product');",
+									"    });",
+									"",
+									"    pm.test('Product has required fields with correct types', function () {",
+									"        const product = pm.response.json().product;",
+									"        pm.expect(product).to.have.property('id');",
+									"        pm.expect(product.id).to.be.a('string');",
+									"        pm.expect(product).to.have.property('name');",
+									"        pm.expect(product.name).to.be.a('string');",
+									"        pm.expect(product).to.have.property('price');",
+									"        pm.expect(product.price).to.be.a('number');",
+									"        pm.expect(product).to.have.property('category');",
+									"        pm.expect(product.category).to.be.a('string');",
+									"    });",
+									"}",
+									"",
+									"// Test for validation errors (400)",
+									"if (pm.response.code === 400) {",
+									"    pm.test('Status code is 400 Bad Request', function () {",
+									"        pm.response.to.have.status(400);",
+									"    });",
+									"",
+									"    pm.test('Response has error message', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('error');",
+									"        pm.expect(jsonData.error).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Pro plan\",\n  \"price\": 49,\n  \"category\": \"subscriptions\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Create a new product.\n\nRequest body:\n- name (required): Product name\n- price (optional, default: 0): Product price (must be a number)\n- category (optional, default: \"general\"): Product category\n\nResponse 201:\n```json\n{\n  \"product\": {\n    \"id\": \"p1\",\n    \"name\": \"Pro plan\",\n    \"price\": 49,\n    \"category\": \"subscriptions\"\n  }\n}\n```\n\nErrors:\n- 400: \"name is required\"\n- 400: \"price must be a number\""
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has products array', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('products');",
+									"    pm.expect(jsonData.products).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Each product has required fields with correct types', function () {",
+									"    const products = pm.response.json().products;",
+									"    products.forEach(function(product) {",
+									"        pm.expect(product).to.have.property('id');",
+									"        pm.expect(product.id).to.be.a('string');",
+									"        pm.expect(product).to.have.property('name');",
+									"        pm.expect(product.name).to.be.a('string');",
+									"        pm.expect(product).to.have.property('price');",
+									"        pm.expect(product.price).to.be.a('number');",
+									"        pm.expect(product).to.have.property('category');",
+									"        pm.expect(product.category).to.be.a('string');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								"all"
+							]
+						},
+						"description": "Return all products.\n\nResponse 200:\n```json\n{\n  \"products\": [\n    { \"id\": \"p1\", \"name\": \"Pro plan\", \"price\": 49, \"category\": \"subscriptions\" }\n  ]\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test for successful product retrieval (200)",
+									"if (pm.response.code === 200) {",
+									"    pm.test('Status code is 200 OK', function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test('Response has product object', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('product');",
+									"    });",
+									"",
+									"    pm.test('Product has required fields with correct types', function () {",
+									"        const product = pm.response.json().product;",
+									"        pm.expect(product).to.have.property('id');",
+									"        pm.expect(product.id).to.be.a('string');",
+									"        pm.expect(product).to.have.property('name');",
+									"        pm.expect(product.name).to.be.a('string');",
+									"        pm.expect(product).to.have.property('price');",
+									"        pm.expect(product.price).to.be.a('number');",
+									"        pm.expect(product).to.have.property('category');",
+									"        pm.expect(product.category).to.be.a('string');",
+									"    });",
+									"}",
+									"",
+									"// Test for product not found (404)",
+									"if (pm.response.code === 404) {",
+									"    pm.test('Status code is 404 Not Found', function () {",
+									"        pm.response.to.have.status(404);",
+									"    });",
+									"",
+									"    pm.test('Response has error message for product not found', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('error');",
+									"        pm.expect(jsonData.error).to.eql('product not found');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "p1",
+									"description": "Product ID"
+								}
+							]
+						},
+						"description": "Return a single product by id.\n\nResponse 200:\n```json\n{\n  \"product\": { \"id\": \"p1\", \"name\": \"Pro plan\", \"price\": 49, \"category\": \"subscriptions\" }\n}\n```\n\nError 404:\n```json\n{ \"error\": \"product not found\" }\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Products (with filter)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has products array', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('products');",
+									"    pm.expect(jsonData.products).to.be.an('array');",
+									"});",
+									"",
+									"pm.test('Each product has required fields with correct types', function () {",
+									"    const products = pm.response.json().products;",
+									"    products.forEach(function(product) {",
+									"        pm.expect(product).to.have.property('id');",
+									"        pm.expect(product.id).to.be.a('string');",
+									"        pm.expect(product).to.have.property('name');",
+									"        pm.expect(product.name).to.be.a('string');",
+									"        pm.expect(product).to.have.property('price');",
+									"        pm.expect(product.price).to.be.a('number');",
+									"        pm.expect(product).to.have.property('category');",
+									"        pm.expect(product.category).to.be.a('string');",
+									"    });",
+									"});",
+									"",
+									"pm.test('Filtered products match the requested category', function () {",
+									"    const categoryFilter = pm.request.url.query.get('category');",
+									"    if (categoryFilter) {",
+									"        const products = pm.response.json().products;",
+									"        products.forEach(function(product) {",
+									"            pm.expect(product.category).to.eql(categoryFilter);",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products?category=subscriptions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "subscriptions",
+									"description": "Filter products by category (optional)"
+								}
+							]
+						},
+						"description": "Return products filtered by category. If category is omitted, all products are returned.\n\nQuery Parameters:\n- category (optional): Filter by product category\n\nResponse 200:\n```json\n{\n  \"products\": [\n    { \"id\": \"p1\", \"name\": \"Pro plan\", \"price\": 49, \"category\": \"subscriptions\" }\n  ]\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Product to Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test for successful assignment (201)",
+									"if (pm.response.code === 201) {",
+									"    pm.test('Status code is 201 Created', function () {",
+									"        pm.response.to.have.status(201);",
+									"    });",
+									"",
+									"    pm.test('Response has assignment object', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('assignment');",
+									"    });",
+									"",
+									"    pm.test('Assignment has required fields with correct types', function () {",
+									"        const assignment = pm.response.json().assignment;",
+									"        pm.expect(assignment).to.have.property('id');",
+									"        pm.expect(assignment.id).to.be.a('string');",
+									"        pm.expect(assignment).to.have.property('accountId');",
+									"        pm.expect(assignment.accountId).to.be.a('string');",
+									"        pm.expect(assignment).to.have.property('productId');",
+									"        pm.expect(assignment.productId).to.be.a('string');",
+									"        pm.expect(assignment).to.have.property('createdAt');",
+									"        pm.expect(assignment.createdAt).to.be.a('string');",
+									"    });",
+									"",
+									"    pm.test('Response has charge object when charging is enabled', function () {",
+									"        const jsonData = pm.response.json();",
+									"        if (jsonData.charge) {",
+									"            pm.expect(jsonData.charge).to.have.property('balance');",
+									"            pm.expect(jsonData.charge.balance).to.be.a('number');",
+									"            pm.expect(jsonData.charge).to.have.property('currency');",
+									"            pm.expect(jsonData.charge.currency).to.be.a('string');",
+									"        }",
+									"    });",
+									"}",
+									"",
+									"// Test for missing accountId (400)",
+									"if (pm.response.code === 400) {",
+									"    pm.test('Status code is 400 Bad Request', function () {",
+									"        pm.response.to.have.status(400);",
+									"    });",
+									"",
+									"    pm.test('Response has error message', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('error');",
+									"        pm.expect(jsonData.error).to.be.a('string');",
+									"    });",
+									"}",
+									"",
+									"// Test for product not found (404)",
+									"if (pm.response.code === 404) {",
+									"    pm.test('Status code is 404 Not Found', function () {",
+									"        pm.response.to.have.status(404);",
+									"    });",
+									"",
+									"    pm.test('Response has error message for product not found', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('error');",
+									"        pm.expect(jsonData.error).to.eql('product not found');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"accountId\": \"acc_123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/:id/assign",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"products",
+								":id",
+								"assign"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "p1",
+									"description": "Product ID to assign"
+								}
+							]
+						},
+						"description": "Assign a product to an account. If CHARGE_ON_ASSIGN=true and price is numeric, the accounts service is charged.\n\nRequest body:\n- accountId (required): The account ID to assign the product to\n\nResponse 201:\n```json\n{\n  \"assignment\": {\n    \"id\": \"as1\",\n    \"accountId\": \"acc_123\",\n    \"productId\": \"p1\",\n    \"createdAt\": \"2026-02-10T12:00:00.000Z\"\n  },\n  \"charge\": {\n    \"balance\": 151,\n    \"currency\": \"USD\"\n  }\n}\n```\n\nErrors:\n- 400: \"accountId is required\"\n- 404: \"product not found\""
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing products in the catalog"
+		},
+		{
+			"name": "Assignments",
+			"item": [
+				{
+					"name": "Get Assignments by Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test for successful retrieval (200)",
+									"if (pm.response.code === 200) {",
+									"    pm.test('Status code is 200 OK', function () {",
+									"        pm.response.to.have.status(200);",
+									"    });",
+									"",
+									"    pm.test('Response has assignments array', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('assignments');",
+									"        pm.expect(jsonData.assignments).to.be.an('array');",
+									"    });",
+									"",
+									"    pm.test('Each assignment has required fields with correct types', function () {",
+									"        const assignments = pm.response.json().assignments;",
+									"        assignments.forEach(function(assignment) {",
+									"            pm.expect(assignment).to.have.property('id');",
+									"            pm.expect(assignment.id).to.be.a('string');",
+									"            pm.expect(assignment).to.have.property('accountId');",
+									"            pm.expect(assignment.accountId).to.be.a('string');",
+									"            pm.expect(assignment).to.have.property('productId');",
+									"            pm.expect(assignment.productId).to.be.a('string');",
+									"            pm.expect(assignment).to.have.property('createdAt');",
+									"            pm.expect(assignment.createdAt).to.be.a('string');",
+									"        });",
+									"    });",
+									"}",
+									"",
+									"// Test for missing accountId query parameter (400)",
+									"if (pm.response.code === 400) {",
+									"    pm.test('Status code is 400 Bad Request', function () {",
+									"        pm.response.to.have.status(400);",
+									"    });",
+									"",
+									"    pm.test('Response has error message for missing accountId', function () {",
+									"        const jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('error');",
+									"        pm.expect(jsonData.error).to.eql('accountId query is required');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assignments?accountId=acc_123",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assignments"
+							],
+							"query": [
+								{
+									"key": "accountId",
+									"value": "acc_123",
+									"description": "Account ID to get assignments for (required)"
+								}
+							]
+						},
+						"description": "Return assignments for an account.\n\nQuery Parameters:\n- accountId (required): The account ID to get assignments for\n\nResponse 200:\n```json\n{\n  \"assignments\": [\n    {\n      \"id\": \"as1\",\n      \"accountId\": \"acc_123\",\n      \"productId\": \"p1\",\n      \"createdAt\": \"2026-02-10T12:00:00.000Z\"\n    }\n  ]\n}\n```\n\nError 400:\n```json\n{ \"error\": \"accountId query is required\" }\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing product assignments to accounts"
+		},
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 OK', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has status field with value ok', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"    pm.expect(jsonData.status).to.eql('ok');",
+									"});",
+									"",
+									"pm.test('Response has service field with value catalog-api', function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('service');",
+									"    pm.expect(jsonData.service).to.eql('catalog-api');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Service health check endpoint.\n\nResponse 200:\n```json\n{ \"status\": \"ok\", \"service\": \"catalog-api\" }\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Health check endpoints for the service"
+		}
+	]
+}
