@@ -26,10 +26,16 @@ spec:
             - name: ACCOUNTS_URL
               value: "http://accounts-api.accounts.svc.cluster.local:3002"
             # Insights (set by accounts orchestrator)
+            # Get from Insights in Workspace
             - name: POSTMAN_INSIGHTS_PROJECT_ID
               value: "__CATALOG_PROJECT_ID__"
             - name: POSTMAN_INSIGHTS_API_KEY
               value: "__POSTMAN_API_KEY__"
+            # Get from API Catalog
+            - name: POSTMAN_INSIGHTS_WORKSPACE_ID
+              value: "__CATALOG_WORKSPACE_ID__"
+            - name: POSTMAN_INSIGHTS_SYSTEM_ENV
+              value: "__POSTMAN_SYSTEM_ENV__"
           ports:
             - containerPort: 3003
           readinessProbe:
